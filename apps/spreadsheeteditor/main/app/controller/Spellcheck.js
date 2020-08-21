@@ -174,8 +174,10 @@ define([
                 isApply = false;
             if (sessionValue)
                 value = parseInt(sessionValue);
-            else
-                value = this.mode.lang ? parseInt(Common.util.LanguageInfo.getLocalLanguageCode(this.mode.lang)) : 0x0409;
+            else {
+                var code = this.mode.lang ? Common.util.LanguageInfo.getLocalLanguageCode(this.mode.lang) : 0x0409;
+                value = code ? parseInt(code) : 0x0409;
+            }
             var combo = this.panelSpellcheck.cmbDictionaryLanguage;
             if (this.langs && this.langs.length>0) {
                 if (combo.store.length === 0) {
@@ -183,14 +185,17 @@ define([
                     isApply = true;
                 }
                 var item = combo.store.findWhere({value: value});
-                if (!item && this.allLangs[value]) {
-                    value = this.allLangs[value][0].split(/[\-\_]/)[0];
-                    item = combo.store.find(function(model){
-                        return model.get('shortName').indexOf(value)==0;
-                    });
+                if (!item) {
+                    if (this.allLangs[value]) {
+                        var str = this.allLangs[value][0].split(/[\-\_]/)[0],
+                            code = Common.util.LanguageInfo.getLocalLanguageCode(str);
+                        value = code!==null ? parseInt(code) : value;
+                    }
+                    combo.setValue(Common.util.LanguageInfo.getLocalLanguageName(value)[1]);
+                } else {
+                    combo.setValue(item.get('value'));
+                    value = combo.getValue();
                 }
-                combo.setValue(item ? item.get('value') : this.langs[0].value);
-                value = combo.getValue();
             } else {
                 combo.setValue(Common.util.LanguageInfo.getLocalLanguageName(value)[1]);
                 combo.setDisabled(true);
