@@ -1381,21 +1381,26 @@ define([
                 value;
             if (sessionValue)
                 value = parseInt(sessionValue);
-            else
-                value = this.mode.lang ? parseInt(Common.util.LanguageInfo.getLocalLanguageCode(this.mode.lang)) : 0x0409;
+            else {
+                var code = this.mode.lang ? Common.util.LanguageInfo.getLocalLanguageCode(this.mode.lang) : 0x0409;
+                value = code ? parseInt(code) : 0x0409;
+            }
             if (langs && langs.length > 0) {
                 if (this.cmbDictionaryLanguage.store.length === 0 || change) {
                     this.cmbDictionaryLanguage.setData(langs);
                 }
                 var item = this.cmbDictionaryLanguage.store.findWhere({value: value});
-                if (!item && allLangs[value]) {
-                    value = allLangs[value][0].split(/[\-\_]/)[0];
-                    item = this.cmbDictionaryLanguage.store.find(function(model){
-                        return model.get('shortName').indexOf(value)==0;
-                    });
+                if (!item) {
+                    if (allLangs[value]) {
+                        var str = allLangs[value][0].split(/[\-\_]/)[0],
+                            code = Common.util.LanguageInfo.getLocalLanguageCode(str);
+                        value = code!==null ? parseInt(code) : value;
+                    }
+                    this.cmbDictionaryLanguage.setValue(Common.util.LanguageInfo.getLocalLanguageName(value)[1]);
+                } else {
+                    this.cmbDictionaryLanguage.setValue(item.get('value'));
+                    value = this.cmbDictionaryLanguage.getValue();
                 }
-                this.cmbDictionaryLanguage.setValue(item ? item.get('value') : langs[0].value);
-                value = this.cmbDictionaryLanguage.getValue();
                 if (value !== parseInt(sessionValue)) {
                     Common.Utils.InternalSettings.set("sse-spellcheck-locale", value);
                 }
